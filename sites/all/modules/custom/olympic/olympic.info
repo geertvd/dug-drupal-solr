@@ -1,0 +1,8 @@
+core = "7.x"
+name = "Olympics module"
+package = "DUG Demo"
+
+dependencies[] = apachesolr
+dependencies[] = apachesolr_search
+dependencies[] = js
+dependencies[] = entity

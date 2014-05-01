@@ -1,0 +1,25 @@
+# Ignore configuration files that may contain sensitive information.
+sites/*/settings*.php
+sites/local.sites.php
+
+# Ignore paths that contain user-generated content.
+sites/*/files
+sites/*/private
+
+# Ignore system files
+.DS_Store
+Thumbs.db
+
+# Ignore NetBeans & Eclipse
+nbproject
+.project
+.settings
+.idea
+
+# Ignore sass-cache files.
+*.sass-cache*
+
+# Node stuff
+.grunt
+npm-debug.log
+node_modules

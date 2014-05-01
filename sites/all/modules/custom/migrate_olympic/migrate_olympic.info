@@ -1,0 +1,7 @@
+core = "7.x"
+dependencies[] = "migrate"
+files[] = "migrate_olympic.migrate.inc"
+files[] = olympic.inc
+name = "Migrate olympians"
+package = "DUG Demo"
+
