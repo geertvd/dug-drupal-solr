@@ -7,8 +7,8 @@ function olympic_js() {
   return array(
     'search' => array(
       'callback' => 'olympic_js_search_api',
-      'includes' => array('pager', 'path', 'theme', 'menu'),
-      'dependencies' => array('apachesolr', 'apachesolr_search', 'system', 'node', 'user'),
+      'includes' => array('pager', 'theme', 'menu', 'path'),
+      'dependencies' => array('apachesolr', 'apachesolr_search', 'system', 'dblog'),
       'page arguments' => array(1, 2),
       'skip_hook_init' => TRUE,
       'i18n' => FALSE,
@@ -20,9 +20,14 @@ function olympic_js() {
  * Implements hook_menu().
  */
 function olympic_menu() {
-
   $items['menu/olympic/search/%/%'] = array(
     'page callback' => 'olympic_menu_search_api',
+    'page arguments' => array(3, 4),
+    'access arguments' => array('access content'),
+  );
+
+  $items['database/olympic/search/%/%'] = array(
+    'page callback' => 'olympic_database_search_api',
     'page arguments' => array(3, 4),
     'access arguments' => array('access content'),
   );
@@ -32,6 +37,49 @@ function olympic_menu() {
 function olympic_menu_search_api($entity_type, $bundle) {
   header('Content-type: application/json');
   print json_encode(olympic_js_search_api($entity_type, $bundle));
+  exit();
+}
+
+function olympic_database_search_api($entity_type, $bundle) {
+  header('Content-type: application/json');
+
+  $per_page = isset($_GET['per_page']) ? $_GET['per_page'] : 10;
+  if ($per_page) {
+    $settings['apachesolr_search_per_page'] = $per_page;
+  }
+
+  $filters = array();
+  if ($bundle) {
+    $settings['fq'][] = "bundle:$bundle";
+    $filters = olympic_filters($bundle);
+  }
+
+  $search_string = isset($_GET['search']) ? $_GET['search'] : '';
+
+  // Loop over filters and check if they are available as GET param.
+  foreach ($filters as $filter_key => $filter_pattern) {
+    $filter_value = isset($_GET[$filter_key]) ? $_GET[$filter_key] : FALSE;
+    if ($filter_value) {
+      $settings['fq'][] = str_replace('!value', $filter_value, $filter_pattern);
+    }
+  }
+  $response = olympic_search($search_string, $settings);
+
+  $items = array();
+  if (!empty($response->results)) {
+    foreach ($response->results as $result) {
+      $olympian_node = node_load($result['fields']['entity_id']);
+      $items[] = olympic_json_object($olympian_node);
+    }
+  }
+
+  $search_results_object = apachesolr_static_response_cache('apachesolr@solr');
+
+  $return = array(
+    'data' => $items,
+    'total_results' => $search_results_object->response->numFound,
+  );
+  print json_encode($return);
   exit();
 }
 
@@ -63,9 +111,13 @@ function olympic_js_search_api($entity_type, $bundle = FALSE) {
   // We need to define MAINTENANCE_MODE here, otherwise theme() function will complain about not all the modules being loaded.
   define('MAINTENANCE_MODE', 'js');
 
+  global $language;
+  global $language_url;
+  $language_url = $language;
+
   $settings = array();
 
-  $per_page = isset($_GET['per_page']) ? $_GET['per_page'] : 10;
+  $per_page = isset($_GET['per_page']) ? $_GET['per_page'] : 1000;
   if ($per_page) {
     $settings['apachesolr_search_per_page'] = $per_page;
   }
@@ -150,7 +202,12 @@ function olympic_apachesolr_query_alter(DrupalSolrQueryInterface $query) {
  * Implements hook_apachesolr_index_document_build_ENTITY_TYPE().
  */
 function olympic_apachesolr_index_document_build_node(ApacheSolrDocument $document, $node, $env_id) {
+  if ($json_object = olympic_json_object($node)) {
+    $document->ss_json = serialize($json_object);
+  }
+}
 
+function olympic_json_object($node) {
   switch ($node->type) {
     case 'olympian':
       $node_wrapper = entity_metadata_wrapper('node', $node);
@@ -158,8 +215,6 @@ function olympic_apachesolr_index_document_build_node(ApacheSolrDocument $docume
       $country_term = $node_wrapper->field_olympian_country->value();
       $sport_term = $node_wrapper->field_olympian_sport->value();
       $json_object = array(
-        'bundle' => $node->type,
-        'nid' => $node->nid,
         'title' => $node->title,
         'age' => $node_wrapper->field_olympian_age->value(),
         'year' => $node_wrapper->field_olympian_year->value(),
@@ -172,9 +227,16 @@ function olympic_apachesolr_index_document_build_node(ApacheSolrDocument $docume
         'url' => $node_wrapper->url->value(),
       );
 
-      $document->ss_json = serialize($json_object);
-
-
+      return $json_object;
       break;
   }
+
+  return FALSE;
+}
+
+/**
+ * Implements hook_apachesolr_entity_info_alter().
+ */
+function olympic_apachesolr_entity_info_alter(&$entity_info) {
+  unset($entity_info['node']['result callback']);
 }
