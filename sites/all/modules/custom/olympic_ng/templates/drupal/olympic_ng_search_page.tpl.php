@@ -8,7 +8,7 @@
     </form>
     <ul>
       <li ng-repeat="result in results">
-        <div>{{result.name}}</div>
+        <div>{{result.title}}</div>
       </li>
     </ul>
     <div class="pagination-centered">

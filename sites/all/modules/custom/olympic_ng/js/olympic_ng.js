@@ -27,16 +27,16 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
     'year': '',
     'page': 1
   }
-  $scope.page = function(){
-    return $scope.search.page + 1;
-  };
   _.extend($scope.search, $location.search());
+  $scope.page = $scope.search.page + 1;
 
   $scope.launchSearch = function () {
     $scope.createUrlWithCurrentState();
     var promise = search.getResults({
       'search' : $scope.search.keyword,
-      'year' : $scope.search.year
+      'year' : $scope.search.year,
+      'page' : $scope.search.page,
+      'per_page' : $scope.results_per_page
     });
 
     promise.then(function (result) {
@@ -55,6 +55,14 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
       }
     })
   }
+
+  $scope.$watch('page', function(newValue, oldValue){
+    if(newValue != oldValue){
+      $scope.search.page = newValue - 1;
+      $scope.launchSearch();
+      $scope.createUrlWithCurrentState();
+    }
+  })
 
 
 });
