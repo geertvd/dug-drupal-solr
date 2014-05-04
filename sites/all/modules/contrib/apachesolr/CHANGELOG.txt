@@ -1,5 +1,6 @@
 Apache Solr integration 7.x-1.x, xxxx-xx-xx
 -----------------------------
+#2157849 by Nick_vh, pwolanin: Copy over the new Solr Config files from the common schema project
 
 Apache Solr integration 7.x-1.6, 2013-11-14
 -----------------------------

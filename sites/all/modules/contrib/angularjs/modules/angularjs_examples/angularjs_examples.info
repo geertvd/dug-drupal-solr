@@ -1,0 +1,19 @@
+name = AngularJS Examples
+description = Provides examples using AngularJS and Drupal
+core = 7.x
+dependencies[] = angularjs
+dependencies[] = restws
+
+; Information added by drupal.org packaging script on 2013-10-26
+version = "7.x-1.2"
+core = "7.x"
+project = "angularjs"
+datestamp = "1382764231"
+
+
+; Information added by Drupal.org packaging script on 2014-01-16
+version = "7.x-1.3+2-dev"
+core = "7.x"
+project = "angularjs"
+datestamp = "1389909211"
+
