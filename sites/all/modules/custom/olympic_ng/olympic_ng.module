@@ -1,0 +1,27 @@
+<?php
+/**
+ * Implements hook_menu
+ */
+function olympic_ng_menu() {
+
+  $items['app/olympic/search'] = array(
+    'title' => 'Olympic search',
+    'page callback' => 'olympic_ng_search_page',
+    'access arguments' => array('access content'),
+    'type' => MENU_NORMAL_ITEM,
+    'file' => 'includes/olympic_ng.pages.inc',
+  );
+  return $items;
+}
+
+/**
+ * Implements hook_theme
+ */
+function olympic_ng_theme() {
+  return array(
+    'olympic_ng_search_page' => array(
+      'template' => 'templates/drupal/olympic_ng_search_page',
+      'arguments' => array('values' => NULL),
+    )
+  );
+}

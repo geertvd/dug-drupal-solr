@@ -1,0 +1,6 @@
+name = "Olympic angular app"
+description = "This module contains the Olympic angular app"
+core = "7.x"
+package = "Custom"
+
+dependencies[] = jquery_update
