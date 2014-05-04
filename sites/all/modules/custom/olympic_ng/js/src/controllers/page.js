@@ -4,26 +4,37 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
   $scope.search = $location.search();
   $scope.results = {};
   $scope.total_results = 0;
-  $scope.results_per_page = 10;
+  $scope.results_per_page = 30;
   $scope.search = {
     'keyword': '',
     'year': '',
     'page': 1
   }
+
   _.extend($scope.search, $location.search());
-  $scope.page = $scope.search.page + 1;
 
-  $scope.launchSearch = function () {
+  $scope.searchInput = $scope.search.keyword;
+  $scope.launchSearch = function (newSearch) {
+    if (newSearch){
+      $scope.search.keyword = $scope.searchInput;
+      $scope.search.page = 1;
+      var promise = search.getResults({
+        'search' : $scope.search.keyword,
+        'year' : $scope.search.year,
+        'page' : 0,
+        'per_page' : $scope.results_per_page
+      });
+    } else {
+      var promise = search.getResults({
+        'search' : $scope.search.keyword,
+        'year' : $scope.search.year,
+        'page' : parseInt($scope.search.page) - 1,
+        'per_page' : $scope.results_per_page
+      });
+    }
+
     $scope.createUrlWithCurrentState();
-    var promise = search.getResults({
-      'search' : $scope.search.keyword,
-      'year' : $scope.search.year,
-      'page' : $scope.search.page,
-      'per_page' : $scope.results_per_page
-    });
-
     promise.then(function (result) {
-      console.log(result);
       $scope.total_results = result.total_results;
       /** When the list is returned add to our view */
       $scope.results = result.data;
@@ -39,13 +50,17 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
     })
   }
 
-  $scope.$watch('page', function(newValue, oldValue){
+  $scope.$watch('search.page', function(newValue, oldValue){
     if(newValue != oldValue){
-      $scope.search.page = newValue - 1;
-      $scope.launchSearch();
+      $scope.launchSearch(false);
       $scope.createUrlWithCurrentState();
     }
   })
-
+  $scope.$watchCollection('search', function(newValue, oldValue){
+    if(newValue != oldValue){
+      $scope.createUrlWithCurrentState();
+    }
+  })
+  $scope.launchSearch(false);
 
 });
