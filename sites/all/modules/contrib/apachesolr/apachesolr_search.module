@@ -1338,7 +1338,7 @@ function apachesolr_search_process_response($response, DrupalSolrQueryInterface 
       }
       $result = array(
         // link is a required field, so handle it centrally.
-        'link' => url($doc->path, $url_options),
+        //'link' => url($doc->path, $url_options),
         // template_preprocess_search_result() runs check_plain() on the title
         // again.  Decode to correct the display.
         'title' => htmlspecialchars_decode($doc->label, ENT_QUOTES),

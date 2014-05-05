@@ -78,6 +78,7 @@ function olympic_database_search_api($entity_type, $bundle) {
   $return = array(
     'data' => $items,
     'total_results' => $search_results_object->response->numFound,
+    'facets' => $search_results_object->facet_counts->facet_fields,
   );
   print json_encode($return);
   exit();
@@ -151,6 +152,7 @@ function olympic_js_search_api($entity_type, $bundle = FALSE) {
   return array(
     'data' => $items,
     'total_results' => $search_results_object->response->numFound,
+    'facets' => $search_results_object->facet_counts->facet_fields,
   );
 }
 
@@ -196,6 +198,8 @@ function olympic_search($keys = '', $extra_settings = array()) {
  */
 function olympic_apachesolr_query_alter(DrupalSolrQueryInterface $query) {
   $query->addParam('fl', 'ss_json');
+  $query->addParam('facet', 'true');
+  $query->addParam('facet.field', 'itm_field_olympian_year');
 }
 
 /**

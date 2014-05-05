@@ -8,7 +8,7 @@ function olympic_ng_search_page() {
 
   $path = drupal_get_path('module', 'olympic_ng');
   $full_path = $base_url . '/' . drupal_get_path('module', 'olympic_ng');
-  $url = $base_url . '/menu/olympic/search/node/olympian';
+  $url = $base_url . '/js/olympic/search/node/olympian';
 
   libraries_load('underscore');
   drupal_add_library('underscore', 'underscore');
