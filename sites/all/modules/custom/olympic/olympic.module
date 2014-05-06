@@ -9,11 +9,82 @@ function olympic_js() {
       'callback' => 'olympic_js_search_api',
       'includes' => array('pager', 'theme', 'menu', 'path'),
       'dependencies' => array('apachesolr', 'apachesolr_search', 'system', 'dblog'),
+      // 'bootstrap'    => DRUPAL_BOOTSTRAP_SESSION,
+      // 'access arguments' => array('e.g. permission'),
+      // 'access callback'  => 'callback function',
       'page arguments' => array(1, 2),
       'skip_hook_init' => TRUE,
       'i18n' => FALSE,
     ),
   );
+}
+
+/**
+ * Implements hook_menu().
+ */
+function olympic_menu() {
+  $items['menu/olympic/search/%/%'] = array(
+    'page callback' => 'olympic_menu_search_api',
+    'page arguments' => array(3, 4),
+    'access arguments' => array('access content'),
+  );
+
+  $items['database/olympic/search/%/%'] = array(
+    'page callback' => 'olympic_database_search_api',
+    'page arguments' => array(3, 4),
+    'access arguments' => array('access content'),
+  );
+  return $items;
+}
+
+function olympic_menu_search_api($entity_type, $bundle) {
+  header('Content-type: application/json');
+  print json_encode(olympic_js_search_api($entity_type, $bundle));
+  exit();
+}
+
+function olympic_database_search_api($entity_type, $bundle) {
+  header('Content-type: application/json');
+
+  $per_page = isset($_GET['per_page']) ? $_GET['per_page'] : 10;
+  if ($per_page) {
+    $settings['apachesolr_search_per_page'] = $per_page;
+  }
+
+  $filters = array();
+  if ($bundle) {
+    $settings['fq'][] = "bundle:$bundle";
+    $filters = olympic_filters($bundle);
+  }
+
+  $search_string = isset($_GET['search']) ? $_GET['search'] : '';
+
+  // Loop over filters and check if they are available as GET param.
+  foreach ($filters as $filter_key => $filter_pattern) {
+    $filter_value = isset($_GET[$filter_key]) ? $_GET[$filter_key] : FALSE;
+    if ($filter_value) {
+      $settings['fq'][] = str_replace('!value', $filter_value, $filter_pattern);
+    }
+  }
+  $response = olympic_search($search_string, $settings);
+
+  $items = array();
+  if (!empty($response->results)) {
+    foreach ($response->results as $result) {
+      $olympian_node = node_load($result['fields']['entity_id']);
+      $items[] = olympic_json_object($olympian_node);
+    }
+  }
+
+  $search_results_object = apachesolr_static_response_cache('apachesolr@solr');
+
+  $return = array(
+    'data' => $items,
+    'total_results' => $search_results_object->response->numFound,
+    'facets' => $search_results_object->facet_counts->facet_fields,
+  );
+  print json_encode($return);
+  exit();
 }
 
 /**
