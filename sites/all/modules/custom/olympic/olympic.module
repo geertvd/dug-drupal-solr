@@ -12,9 +12,155 @@ function olympic_js() {
 }
 
 /**
- * Callback function of the search endpoint.
+ * Retrieves the available filters for a specific bundle.
+ *
+ * Note: I would have liked to put this in a hook to seperate any content logic from this module
+ * but since we are using the js module I would need to add each module that implements this hook as a dependency in hook_js().
  */
-function olympic_js_search_api() {
-  return 'It works!';
+function olympic_filters($bundle) {
+  $filters = array();
+
+  switch ($bundle) {
+    case 'olympian':
+      $filters = array(
+        'country' => 'im_field_olympian_country:!value',
+        'sport' => 'im_field_olympian_sport:!value',
+      );
+      break;
+  }
+
+  return $filters;
 }
 
+/**
+ * Callback function of the search endpoint.
+ */
+function olympic_js_search_api($entity_type, $bundle = FALSE) {
+  // We need to define MAINTENANCE_MODE here, otherwise theme() function will complain about not all the modules being loaded.
+  define('MAINTENANCE_MODE', 'js');
+
+  global $language;
+  global $language_url;
+  $language_url = $language;
+
+  $settings = array();
+
+  $per_page = isset($_GET['per_page']) ? $_GET['per_page'] : 1000;
+  if ($per_page) {
+    $settings['apachesolr_search_per_page'] = $per_page;
+  }
+
+  $filters = array();
+  if ($bundle) {
+    $settings['fq'][] = "bundle:$bundle";
+    $filters = olympic_filters($bundle);
+  }
+
+  $search_string = isset($_GET['search']) ? $_GET['search'] : '';
+
+  // Loop over filters and check if they are available as GET param.
+  foreach ($filters as $filter_key => $filter_pattern) {
+    $filter_value = isset($_GET[$filter_key]) ? $_GET[$filter_key] : FALSE;
+    if ($filter_value) {
+      $settings['fq'][] = str_replace('!value', $filter_value, $filter_pattern);
+    }
+  }
+  $response = olympic_search($search_string, $settings);
+  $items = array();
+  if (!empty($response->results)) {
+    foreach ($response->results as $result) {
+      $result_fields = $result['fields'];
+      $items[] = unserialize($result_fields['ss_json']);
+    }
+  }
+
+  $search_results_object = apachesolr_static_response_cache('apachesolr@solr');
+
+  return array(
+    'data' => $items,
+    'total_results' => $search_results_object->response->numFound,
+    'facets' => $search_results_object->facet_counts->facet_fields,
+  );
+}
+
+/**
+ * Fire off a SOLR query and return the results
+ *
+ * @param string $keys
+ * @param unknown $extra_settings
+ * @return stdClass
+ */
+function olympic_search($keys = '', $extra_settings = array()) {
+  $data = new stdClass();
+
+  $settings = array(
+    'apachesolr_search_search_type' => 'custom',
+    'apachesolr_search_per_page' => 10000000,
+    'apachesolr_search_spellecheck' => FALSE,
+    'apachesolr_search_search_box' => FALSE,
+    'apachesolr_search_browse' => 'results',
+    'apachesolr_search_custom_enable' => TRUE,
+    'apachesolr_search_custom_enable' => TRUE,
+    'fq' => array('entity_type:node'),
+  );
+  $settings = array_merge($settings, $extra_settings);
+
+  // Create a custom search page
+  $search_page = array(
+    'page_id' => 'olympic',
+    'settings' => $settings,
+    'env_id' => 'solr',
+    'search_path' => $_GET['q'],
+  );
+  $conditions = apachesolr_search_conditions_default($search_page);
+
+  // Get the results list
+  $data->results = apachesolr_search_search_results($keys, $conditions, $search_page);
+
+  return $data;
+}
+
+/**
+ * Implememts hook_apachesolr_query_alter().
+ */
+function olympic_apachesolr_query_alter(DrupalSolrQueryInterface $query) {
+  $query->addParam('fl', 'ss_json');
+  $query->addParam('facet', 'true');
+  $query->addParam('facet.field', 'itm_field_olympian_year');
+}
+
+/**
+ * Implements hook_apachesolr_index_document_build_ENTITY_TYPE().
+ */
+function olympic_apachesolr_index_document_build_node(ApacheSolrDocument $document, $node, $env_id) {
+  if ($json_object = olympic_json_object($node)) {
+    $document->ss_json = serialize($json_object);
+  }
+}
+
+function olympic_json_object($node) {
+  switch ($node->type) {
+    case 'olympian':
+      $node_wrapper = entity_metadata_wrapper('node', $node);
+
+      $country_term = $node_wrapper->field_olympian_country->value();
+      $sport_term = $node_wrapper->field_olympian_sport->value();
+      $json_object = array(
+        'title' => $node->title,
+        'age' => $node_wrapper->field_olympian_age->value(),
+        'year' => $node_wrapper->field_olympian_year->value(),
+        'country' => $country_term->name,
+        'sport' => $sport_term->name,
+        'gold_medals' => $node_wrapper->field_olympian_gold_medals->value(),
+        'silver_medals' => $node_wrapper->field_olympian_silver_medals->value(),
+        'bronze_medals' => $node_wrapper->field_olympian_bronze_medals->value(),
+        'total_medals' => $node_wrapper->field_olympian_total_medals->value(),
+        'url' => $node_wrapper->url->value(),
+      );
+
+      return $json_object;
+      break;
+  }
+
+  return FALSE;
+}
