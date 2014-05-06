@@ -4,6 +4,10 @@
  * Callback page that serves custom JavaScript requests on a Drupal installation.
  */
 
+error_reporting(E_ALL);
+ini_set('display_errors', TRUE);
+ini_set('display_startup_errors', TRUE);
+
 /**
  * @var The Drupal root.
  */
