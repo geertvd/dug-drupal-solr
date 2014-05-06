@@ -2850,7 +2850,6 @@ function template_preprocess_region(&$variables) {
  * @see template_process_username()
  */
 function template_preprocess_username(&$variables) {
- //dsm($account);
   $account = $variables['account'];
 
   $variables['extra'] = '';
