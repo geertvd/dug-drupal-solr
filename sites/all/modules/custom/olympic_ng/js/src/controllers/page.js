@@ -61,6 +61,7 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
     if(newValue != oldValue){
       $scope.search.sport = newValue.tid;
       $scope.createUrlWithCurrentState();
+      $scope.launchSearch();
     }
   }, true);
 
@@ -68,12 +69,14 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
     if(newValue != oldValue){
       $scope.search.country = newValue.tid;
       $scope.createUrlWithCurrentState();
+      $scope.launchSearch();
     }
   }, true);
   $scope.$watch('searchInput', function(newValue, oldValue){
     if(newValue != oldValue){
       $scope.search.keyword = newValue;
       $scope.createUrlWithCurrentState();
+      $scope.launchSearch();
     }
   }, true);
 
