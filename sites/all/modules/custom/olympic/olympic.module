@@ -42,6 +42,12 @@ function olympic_filters($bundle) {
  * Callback function of the search endpoint.
  */
 function olympic_js_search_api($entity_type, $bundle = FALSE) {
+  // We need to define MAINTENANCE_MODE here, otherwise theme() function will complain about not all the modules being loaded.
+  define('MAINTENANCE_MODE', 'js');
+
+  global $language;
+  global $language_url;
+  $language_url = $language;
 
   $settings = array();
 
@@ -163,4 +169,11 @@ function olympic_json_object($node) {
   }
 
   return FALSE;
+}
+
+/**
+ * Implements hook_apachesolr_entity_info_alter().
+ */
+function olympic_apachesolr_entity_info_alter(&$entity_info) {
+  unset($entity_info['node']['result callback']);
 }
