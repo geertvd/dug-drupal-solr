@@ -20,7 +20,9 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
   $scope.total_results = 0;
 
   $scope.launchSearchEasySearch = function(){
-    var promise = search.getResults();
+    var promise = search.getResults({
+      search : $scope.searchInput
+    });
     promise.then(function (result) {
       $scope.total_results = result.total_results;
       /** When the list is returned add to our view */
@@ -28,7 +30,7 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
     });
   }
 
-  $scope.launchSearchEasySearch();
+  //$scope.launchSearchEasySearch();
 });
 /*
  * angular-ui-bootstrap
