@@ -8,7 +8,7 @@ function olympic_js() {
     'search' => array(
       'callback' => 'olympic_js_search_api',
       'includes' => array('pager', 'theme', 'menu', 'path'),
-      'dependencies' => array('apachesolr', 'apachesolr_search', 'system'),
+      'dependencies' => array('apachesolr', 'apachesolr_search', 'system', 'dblog'),
       'bootstrap' => DRUPAL_BOOTSTRAP_VARIABLES,
       'page arguments' => array(1, 2),
       'skip_hook_init' => TRUE,
