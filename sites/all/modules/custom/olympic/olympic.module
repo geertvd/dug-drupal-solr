@@ -121,7 +121,7 @@ function olympic_js_search_api($entity_type, $bundle = FALSE) {
 
   $settings = array();
 
-  $per_page = isset($_GET['per_page']) ? $_GET['per_page'] : 1000;
+  $per_page = isset($_GET['per_page']) ? $_GET['per_page'] : 10;
   if ($per_page) {
     $settings['apachesolr_search_per_page'] = $per_page;
   }
