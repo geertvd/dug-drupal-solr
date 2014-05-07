@@ -18,22 +18,39 @@ jQuery(document).ready(function() {
 olympic_ng.app.controller('page', function($scope, search, $location) {
   $scope.results = {};
   $scope.total_results = 0;
+  $scope.results_per_page = 30;
   $scope.search = {
     'keyword': '',
+    'year': '',
     'sport': '',
-    'country': ''
+    'country': '',
+    'page': 1
   }
 
   $scope.launchSearchEasySearch = function(){
 
   }
   $scope.launchSearch = function (newSearch) {
-    $scope.search.keyword = $scope.searchInput;
-    var promise = search.getResults({
-      'search' : $scope.search.keyword,
-      'country' : $scope.search.country,
-      'sport' : $scope.search.sport
-    });
+    if (newSearch){
+      $scope.search.keyword = $scope.searchInput;
+      $scope.search.page = 1;
+      var promise = search.getResults({
+        'search' : $scope.search.keyword,
+        'country' : $scope.search.country,
+        'sport' : $scope.search.sport,
+        'page' : 0,
+        'per_page' : $scope.results_per_page
+      });
+    } else {
+      var promise = search.getResults({
+        'search' : $scope.search.keyword,
+        'year' : $scope.search.year,
+        'country' : $scope.search.country,
+        'sport' : $scope.search.sport,
+        'page' : parseInt($scope.search.page) - 1,
+        'per_page' : $scope.results_per_page
+      });
+    }
 
     $scope.createUrlWithCurrentState();
     promise.then(function (result) {
@@ -78,7 +95,7 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
     if(newValue != oldValue){
       $scope.search.sport = newValue.tid;
       $scope.createUrlWithCurrentState();
-      $scope.launchSearch();
+      $scope.launchSearch(true);
     }
   }, true);
 
@@ -86,18 +103,27 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
     if(newValue != oldValue){
       $scope.search.country = newValue.tid;
       $scope.createUrlWithCurrentState();
-      $scope.launchSearch();
+      $scope.launchSearch(true);
     }
   }, true);
   $scope.$watch('searchInput', function(newValue, oldValue){
     if(newValue != oldValue){
       $scope.search.keyword = newValue;
       $scope.createUrlWithCurrentState();
-      $scope.launchSearch();
+      $scope.launchSearch(true);
     }
   }, true);
 
-  $scope.launchSearch();
+  /* pagination */
+
+  $scope.$watch('search.page', function(newValue, oldValue){
+    if(newValue != oldValue){
+      $scope.launchSearch(false);
+      $scope.createUrlWithCurrentState();
+    }
+  });
+
+  $scope.launchSearch(false);
 
 });
 /*

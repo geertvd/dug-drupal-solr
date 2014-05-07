@@ -18,5 +18,8 @@
     <div ng-repeat="result in results" >
       {{result.title}}
     </div>
+    <div class="pagination-centered" ng-show="total_results >= results_per_page">
+      <pagination total-items="total_results" ng-model="search.page" items-per-page="results_per_page"></pagination>
+    </div>
   </div>
 </div>
