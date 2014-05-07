@@ -16,9 +16,6 @@ jQuery(document).ready(function() {
 });
 
 olympic_ng.app.controller('page', function($scope, search, $location) {
-  // get the parameters from the url search query
-
-  $scope.search = $location.search();
   $scope.results = {};
   $scope.total_results = 0;
   $scope.results_per_page = 30;
@@ -29,14 +26,10 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
     'country': '',
     'page': 1
   }
-  $scope.countries = olympic_ng.countries;
-  $scope.sports = olympic_ng.sports;
-  _.extend($scope.search, $location.search());
 
+  $scope.launchSearchEasySearch = function(){
 
-  $scope.searchInput = $scope.search.keyword;
-  $scope.sport = _.findWhere($scope.sports, {tid: $scope.search.sport});
-  $scope.country = _.findWhere($scope.countries, {tid: $scope.search.country});
+  }
   $scope.launchSearch = function (newSearch) {
     if (newSearch){
       $scope.search.keyword = $scope.searchInput;
@@ -67,9 +60,19 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
     });
   }
 
+
+  /* Taxonomy filters */
+
+  $scope.countries = olympic_ng.countries;
+  $scope.sports = olympic_ng.sports;
+
+  /* Url search query*/
+
+  // merge the existing querie with the parameters given from the url
+  _.extend($scope.search, $location.search());
+
   $scope.createUrlWithCurrentState = function () {
     $location.$search = {};
-    console.log($scope.search);
     _.each($scope.search, function (val, key) {
       if (val) {
         $location.search(key, val);
@@ -79,12 +82,14 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
     })
   }
 
-  $scope.$watch('search.page', function(newValue, oldValue){
-    if(newValue != oldValue){
-      $scope.launchSearch(false);
-      $scope.createUrlWithCurrentState();
-    }
-  });
+
+
+  /* Search input */
+
+  // fill up the input fields with existing parameters
+  $scope.searchInput = $scope.search.keyword;
+  $scope.sport = _.findWhere($scope.sports, {tid: $scope.search.sport});
+  $scope.country = _.findWhere($scope.countries, {tid: $scope.search.country});
 
   $scope.$watch('sport', function(newValue, oldValue){
     if(newValue != oldValue){
@@ -108,6 +113,16 @@ olympic_ng.app.controller('page', function($scope, search, $location) {
       $scope.launchSearch(true);
     }
   }, true);
+
+  /* pagination */
+
+  $scope.$watch('search.page', function(newValue, oldValue){
+    if(newValue != oldValue){
+      $scope.launchSearch(false);
+      $scope.createUrlWithCurrentState();
+    }
+  });
+
   $scope.launchSearch(false);
 
 });
